@@ -627,6 +627,55 @@
 
         let workbookData = {};
 
+        // Auto-load Excel z GitHub
+        const GITHUB_EXCEL_URL = 'https://raw.githubusercontent.com/mkrzyszkowski8-collab/studniowka-2027/main/studniowka.xlsx';
+
+        function autoLoadGitHubExcel() {
+            if (!xlsxLoaded) {
+                setTimeout(autoLoadGitHubExcel, 500);
+                return;
+            }
+
+            fetch(GITHUB_EXCEL_URL)
+                .then(response => response.arrayBuffer())
+                .then(data => {
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    if (workbook.SheetNames.includes('Dashboard')) {
+                        const ws = workbook.Sheets['Dashboard'];
+
+                        workbookData['Fees'] = XLSX.utils.sheet_to_json(ws, {
+                            range: 'A7:B9',
+                            header: 1
+                        });
+
+                        workbookData['Dashboard'] = XLSX.utils.sheet_to_json(ws, {
+                            range: 'H7:M16',
+                            header: 1
+                        });
+
+                        workbookData['Wydatki'] = XLSX.utils.sheet_to_json(ws, {
+                            range: 'AC6:AG18',
+                            header: 1
+                        });
+
+                        workbookData['Zwrot'] = XLSX.utils.sheet_to_json(ws, {
+                            range: 'AN6:AO13',
+                            header: 1
+                        });
+
+                        buildReport();
+                    }
+                })
+                .catch(err => {
+                    console.error('Błąd ładowania z GitHub:', err);
+                    showMessage('⚠️ Nie można załadować danych z GitHub. Użyj pola do wgrania pliku.', 'error');
+                });
+        }
+
+        // Uruchom auto-load przy załadowaniu strony
+        autoLoadGitHubExcel();
+
         function showMessage(msg, type = 'info') {
             const el = document.getElementById('message');
             el.innerHTML = '<div class="status ' + type + '">' + msg + '</div>';
