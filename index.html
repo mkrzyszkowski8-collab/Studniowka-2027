@@ -622,10 +622,14 @@
         script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
         script.onload = function() {
             xlsxLoaded = true;
+            loadFromOneDrive(); // Auto-load na starcie
         };
         document.head.appendChild(script);
 
         let workbookData = {};
+
+        // OneDrive link
+        const ONEDRIVE_URL = 'https://1drv.ms/x/c/606265026b367416/IQCQPItALjc4SKmCKwUq0hIPAfkfEa_zdJvFuFwOcm96kNU?e=RtACZd&download=1';
 
         function showMessage(msg, type = 'info') {
             const el = document.getElementById('message');
@@ -650,6 +654,71 @@
         // Uruchom licznik natychmiast i odświeżaj co 60 sekund
         calculateCountdown();
         setInterval(calculateCountdown, 60000);
+
+        function loadFromOneDrive() {
+            if (!xlsxLoaded) {
+                setTimeout(loadFromOneDrive, 500);
+                return;
+            }
+
+            // Spróbuj bezpośrednio
+            attemptFetch(ONEDRIVE_URL);
+        }
+
+        function attemptFetch(url) {
+            fetch(url, {
+                headers: {
+                    'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                }
+            })
+            .then(response => {
+                if (!response.ok && response.status === 403) {
+                    // CORS issue - spróbuj proxy
+                    console.log('Próbuję proxy...');
+                    return fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+                }
+                return response;
+            })
+            .then(response => response.arrayBuffer())
+            .then(data => {
+                try {
+                    const arr = new Uint8Array(data);
+                    const workbook = XLSX.read(arr, { type: 'array' });
+
+                    if (workbook.SheetNames.includes('Dashboard')) {
+                        const ws = workbook.Sheets['Dashboard'];
+
+                        workbookData['Fees'] = XLSX.utils.sheet_to_json(ws, {
+                            range: 'A7:B9',
+                            header: 1
+                        });
+
+                        workbookData['Dashboard'] = XLSX.utils.sheet_to_json(ws, {
+                            range: 'H7:M16',
+                            header: 1
+                        });
+
+                        workbookData['Wydatki'] = XLSX.utils.sheet_to_json(ws, {
+                            range: 'AC6:AG18',
+                            header: 1
+                        });
+
+                        workbookData['Zwrot'] = XLSX.utils.sheet_to_json(ws, {
+                            range: 'AN6:AO13',
+                            header: 1
+                        });
+
+                        buildReport();
+                        console.log('✓ Excel załadowany z OneDrive!');
+                    }
+                } catch (err) {
+                    console.log('Błąd przetwarzania - użyj manual upload', err);
+                }
+            })
+            .catch(err => {
+                console.log('OneDrive auto-load niedostępny - możesz uploadować ręcznie', err);
+            });
+        }
 
         function loadFile() {
             const file = document.getElementById('excelFile').files[0];
