@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studniówka 2027 - Raport</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: #0f1419;
+            padding: 30px 20px;
+            min-height: 100vh;
+            color: #e2e8f0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #1a1f2e;
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            color: #e2e8f0;
+            margin-bottom: 10px;
+            font-size: 3.2em;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: #a0aec0;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+            font-weight: 400;
+            letter-spacing: 0.4px;
+        }
+
+        h2 {
+            color: #e2e8f0;
+            margin-top: 55px;
+            margin-bottom: 35px;
+            font-size: 1.65em;
+            font-weight: 700;
+            position: relative;
+            padding-bottom: 18px;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 4px;
+            background: #0ea5e9;
+            border-radius: 2px;
+        }
+
+        .upload-box {
+            background: #232d3f;
+            padding: 35px;
+            border-radius: 12px;
+            margin: 30px 0;
+            border: 2px dashed #0ea5e9;
+            transition: all 0.3s;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-box:hover {
+            background: #2a3550;
+            border-color: #0ea5e9;
+            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2);
+        }
+
+        input[type="file"] {
+            padding: 12px 15px;
+            border: 1px solid #4a5568;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            background: #1a1f2e;
+            color: #e2e8f0;
+        }
+
+        button {
+            padding: 14px 40px;
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-left: 12px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+        }
+
+        button:hover {
+            background: #0d8cbb;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            padding: 16px 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            font-weight: 600;
+            border-left: 4px solid;
+        }
+
+        .status.success {
+            background: #1e4d3a;
+            color: #6ee7a8;
+            border-left-color: #27ae60;
+        }
+
+        .status.error {
+            background: #4a1f1f;
+            color: #fc8181;
+            border-left-color: #e74c3c;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 28px;
+            margin: 35px 0;
+        }
+
+        .stat-card {
+            background: #232d3f;
+            padding: 22px 18px;
+            border-radius: 14px;
+            text-align: center;
+            border: 1px solid #34476a;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            min-height: 170px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #0ea5e9;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 35px rgba(14, 165, 233, 0.2);
+            border-color: #0ea5e9;
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            color: #a0aec0;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.6px;
+            line-height: 1.2;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 800;
+            color: #0ea5e9;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        .stat-breakdown {
+            font-size: 0.75em;
+            color: #8892a0;
+            margin-top: 6px;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+
+        .stat-card.negative-card .stat-value {
+            color: #fc8181 !important;
+        }
+
+        .countdown-section {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: #232d3f;
+            padding: 18px 24px;
+            border-radius: 12px;
+            border: 2px solid #0ea5e9;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.25);
+            z-index: 100;
+            width: 180px;
+        }
+
+        .countdown-title {
+            font-size: 0.75em;
+            font-weight: 700;
+            color: #cbd5e0;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .countdown-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .countdown-item {
+            background: rgba(14, 165, 233, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #0ea5e9;
+        }
+
+        .countdown-number {
+            font-size: 1.6em;
+            font-weight: 800;
+            color: #0ea5e9;
+            line-height: 1.1;
+        }
+
+        .countdown-label {
+            font-size: 0.65em;
+            color: #a0aec0;
+            margin-top: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: #232d3f;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        th {
+            background: #0ea5e9;
+            color: white;
+            padding: 18px 16px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.96em;
+            letter-spacing: 0.4px;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid #3d4557;
+            font-size: 0.96em;
+            color: #cbd5e0;
+        }
+
+        tbody tr {
+            transition: all 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #2a3654;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #2a3654;
+        }
+
+        .number {
+            text-align: right;
+            font-family: 'Courier New', 'Monaco', monospace;
+            font-weight: 700;
+            font-size: 1.05em;
+            color: #cbd5e0;
+        }
+
+        .negative {
+            color: #fc8181 !important;
+            font-weight: 800;
+        }
+
+        .positive {
+            color: #6ee7a8 !important;
+            font-weight: 800;
+        }
+
+        .section {
+            background: #232d3f;
+            padding: 32px;
+            margin: 30px 0;
+            border-radius: 12px;
+            border: 1px solid #34476a;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #34476a;
+            transition: all 0.2s;
+        }
+
+        .cost-item:hover {
+            background: rgba(14, 165, 233, 0.06);
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+        .cost-item:last-child { border-bottom: none; }
+
+        .cost-name {
+            font-weight: 600;
+            flex: 1;
+            font-size: 0.96em;
+            color: #cbd5e0;
+        }
+
+        .cost-value {
+            font-family: 'Courier New', 'Monaco', monospace;
+            font-weight: 800;
+            color: #0ea5e9;
+            font-size: 1.1em;
+        }
+
+        .cost-total {
+            background: #232d3f;
+            padding: 32px;
+            border-radius: 12px;
+            margin-top: 25px;
+            border: 2px solid #0ea5e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.2);
+        }
+
+        .cost-total-label {
+            font-weight: 700;
+            font-size: 1.08em;
+            color: #cbd5e0;
+        }
+
+        .cost-total-value {
+            font-family: 'Courier New', 'Monaco', monospace;
+            font-size: 2.4em;
+            font-weight: 800;
+            color: #0ea5e9;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 35px;
+        }
+
+        @media (max-width: 1200px) {
+            .container { padding: 50px 40px; }
+            h1 { font-size: 2.8em; }
+        }
+
+        @media (max-width: 1000px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .container { padding: 40px 30px; }
+            h1 { font-size: 2.4em; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 30px 20px; }
+            h1 { font-size: 2em; }
+            .subtitle { font-size: 0.95em; margin-bottom: 30px; }
+            h2 { font-size: 1.35em; margin-top: 40px; margin-bottom: 25px; }
+
+            .upload-box { padding: 25px; margin: 20px 0; }
+            input[type="file"] { font-size: 0.9em; }
+            button { padding: 12px 30px; font-size: 14px; margin-left: 8px; }
+
+            .stats-grid { grid-template-columns: 1fr; gap: 15px; }
+            .stat-card { padding: 16px 14px; min-height: 140px; }
+            .stat-label { font-size: 0.68em; margin-bottom: 6px; }
+            .stat-value { font-size: 1.5em; }
+            .stat-breakdown { font-size: 0.68em; margin-top: 4px; }
+
+            table { margin: 20px 0; }
+            th { padding: 12px 10px; font-size: 0.85em; }
+            td { padding: 10px; font-size: 0.85em; }
+
+            .section { padding: 20px; margin: 20px 0; }
+            .cost-name { font-size: 0.85em; }
+            .cost-value { font-size: 0.95em; }
+            .cost-total { padding: 20px; flex-direction: column; gap: 12px; }
+            .cost-total-label { font-size: 0.95em; }
+            .cost-total-value { font-size: 1.8em; }
+
+            .countdown-section { top: 20px; right: 20px; width: 150px; padding: 14px 16px; }
+            .countdown-title { font-size: 0.65em; margin-bottom: 10px; }
+            .countdown-number { font-size: 1.4em; }
+            .countdown-label { font-size: 0.6em; margin-top: 2px; }
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 20px 15px; }
+            h1 { font-size: 1.6em; letter-spacing: 0px; margin-bottom: 8px; }
+            .subtitle { font-size: 0.85em; margin-bottom: 20px; }
+            h2 { font-size: 1.15em; margin-top: 30px; margin-bottom: 20px; padding-bottom: 12px; }
+
+            .upload-box { padding: 18px; margin: 15px 0; }
+            input[type="file"] { padding: 10px 8px; font-size: 0.85em; }
+            button { padding: 10px 20px; font-size: 13px; margin-left: 6px; }
+
+            .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+            .stat-card { padding: 12px 10px; min-height: 120px; }
+            .stat-label { font-size: 0.6em; margin-bottom: 4px; }
+            .stat-value { font-size: 1.3em; }
+            .stat-breakdown { font-size: 0.6em; margin-top: 2px; }
+
+            table { margin: 15px 0; }
+            th { padding: 10px 8px; font-size: 0.75em; }
+            td { padding: 8px 6px; font-size: 0.75em; }
+
+            .section { padding: 15px; margin: 15px 0; }
+            .cost-item { padding: 12px 0; }
+            .cost-name { font-size: 0.75em; }
+            .cost-value { font-size: 0.85em; }
+            .cost-total { padding: 15px; flex-direction: column; gap: 10px; }
+            .cost-total-label { font-size: 0.85em; }
+            .cost-total-value { font-size: 1.5em; }
+
+            .countdown-section { top: 15px; right: 15px; width: 130px; padding: 10px 12px; }
+            .countdown-title { font-size: 0.6em; margin-bottom: 8px; }
+            .countdown-grid { gap: 8px; }
+            .countdown-number { font-size: 1.2em; }
+            .countdown-label { font-size: 0.55em; margin-top: 2px; }
+
+            .grid-2 { gap: 20px; }
+        }
+
+        @media (max-width: 360px) {
+            .container { padding: 15px 12px; }
+            h1 { font-size: 1.4em; }
+            h2 { font-size: 1em; }
+            .countdown-section { width: 110px; padding: 8px 10px; }
+            .countdown-title { font-size: 0.55em; }
+            .countdown-number { font-size: 1em; }
+            button { padding: 8px 16px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Studniówka 2027 - Raport Finansowy</h1>
+        <p class="subtitle">Raport szczegółowy na bazie arkusza Dashboard</p>
+
+        <div class="upload-box">
+            <input type="file" id="excelFile" accept=".xlsx,.xls" />
+            <button onclick="loadFile()">📂 Wczytaj plik Excel</button>
+        </div>
+
+        <div id="message"></div>
+
+        <div id="content" style="display:none;">
+            <!-- LICZNIK CZASU - GÓRNY PRAWY ROG -->
+            <div class="countdown-section">
+                <div class="countdown-title">⏰ Do Studniówki</div>
+                <div class="countdown-grid">
+                    <div class="countdown-item">
+                        <div class="countdown-number" id="countdownDays">-</div>
+                        <div class="countdown-label">Dni</div>
+                    </div>
+                    <div class="countdown-item">
+                        <div class="countdown-number" id="countdownHours">-</div>
+                        <div class="countdown-label">Godz.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WYSOKOŚĆ SKŁADEK -->
+            <h2>💳 Wysokość Składek</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Typ Uczestnika</th>
+                        <th class="number">Wysokość Składki</th>
+                    </tr>
+                </thead>
+                <tbody id="feeTable"></tbody>
+            </table>
+
+            <!-- PODSUMOWANIE -->
+            <h2>📊 Podsumowanie Ogólne</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">👥 Łącznie Osób</div>
+                    <div class="stat-value" id="totalPeople">-</div>
+                    <div class="stat-breakdown" id="peopleBreakdown"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">💰 Planowana Kwota</div>
+                    <div class="stat-value" id="plannedTotal">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">✅ Zebrana Kwota</div>
+                    <div class="stat-value" id="collectedTotal">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">📦 Pozostało do Zebrania</div>
+                    <div class="stat-value" id="deficitTotal">-</div>
+                </div>
+            </div>
+
+            <!-- TABELA PER KLASA -->
+            <h2>📋 Szczegóły per Klasa</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Klasa</th>
+                        <th class="number">Uczniowie</th>
+                        <th class="number">Os. Tow.</th>
+                        <th class="number">Razem</th>
+                        <th class="number">Planowana</th>
+                        <th class="number">Zebrana</th>
+                        <th class="number">Pozostało do Zebrania</th>
+                        <th class="number">% Zebrано</th>
+                    </tr>
+                </thead>
+                <tbody id="classTable"></tbody>
+            </table>
+
+            <!-- WYDATKI -->
+            <h2>💸 Wydatki i Koszty Imprezy</h2>
+            <div class="section">
+                <div id="costsContent">
+                    <div style="color: #a0aec0; padding: 20px; text-align: center;">Ładowanie danych kosztów...</div>
+                </div>
+                <div class="cost-total" id="costTotalBox" style="display:none;">
+                    <span class="cost-total-label">ŁĄCZNE KOSZTY IMPREZY:</span>
+                    <span class="cost-total-value" id="costTotalValue">-</span>
+                </div>
+            </div>
+
+            <!-- ANALIZA -->
+            <h2>📈 Analiza Finansowa</h2>
+            <div class="section">
+                <div class="grid-2">
+                    <div>
+                        <h3 style="margin-bottom: 20px; color: #e2e8f0; font-size: 1.25em;">Procent Zebranych Składek</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Klasa</th>
+                                    <th class="number">Zebrано %</th>
+                                </tr>
+                            </thead>
+                            <tbody id="percentTable"></tbody>
+                        </table>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 20px; color: #e2e8f0; font-size: 1.25em;">Pozostało do Zebrania</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Klasa</th>
+                                    <th class="number">Pozostało</th>
+                                </tr>
+                            </thead>
+                            <tbody id="deficitTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- POTENCJALNY ZWROT -->
+            <h2>🔄 Potencjalny Zwrot per Klasa</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Klasa</th>
+                        <th class="number">Zwrot per Klasa</th>
+                    </tr>
+                </thead>
+                <tbody id="zwrotTable"></tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        let xlsxLoaded = false;
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        script.onload = function() {
+            xlsxLoaded = true;
+            loadFromOneDrive(); // Auto-load na starcie
+        };
+        document.head.appendChild(script);
+
+        let workbookData = {};
+
+        // OneDrive link - zmień na swój URL
+        const ONEDRIVE_URL = 'https://1drv.ms/x/c/606265026b367416/IQCQPItALjc4SKmCKwUq0hIPAfkfEa_zdJvFuFwOcm96kNU?download=1';
+
+        function showMessage(msg, type = 'info') {
+            const el = document.getElementById('message');
+            el.innerHTML = '<div class="status ' + type + '">' + msg + '</div>';
+        }
+
+        function calculateCountdown() {
+            const targetDate = new Date(2027, 0, 30, 18, 0, 0);
+            const now = new Date();
+
+            const timeDiff = targetDate - now;
+            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+            const dayEl = document.getElementById('countdownDays');
+            const hoursEl = document.getElementById('countdownHours');
+
+            if (dayEl) dayEl.textContent = Math.max(0, days);
+            if (hoursEl) hoursEl.textContent = Math.max(0, hours);
+        }
+
+        // Uruchom licznik natychmiast i odświeżaj co 60 sekund
+        calculateCountdown();
+        setInterval(calculateCountdown, 60000);
+
+        function loadFromOneDrive() {
+            if (!xlsxLoaded) {
+                setTimeout(loadFromOneDrive, 500);
+                return;
+            }
+
+            fetch(ONEDRIVE_URL)
+                .then(response => response.arrayBuffer())
+                .then(data => {
+                    try {
+                        const arr = new Uint8Array(data);
+                        const workbook = XLSX.read(arr, { type: 'array' });
+
+                        if (workbook.SheetNames.includes('Dashboard')) {
+                            const ws = workbook.Sheets['Dashboard'];
+
+                            workbookData['Fees'] = XLSX.utils.sheet_to_json(ws, {
+                                range: 'A7:B9',
+                                header: 1
+                            });
+
+                            workbookData['Dashboard'] = XLSX.utils.sheet_to_json(ws, {
+                                range: 'H7:M16',
+                                header: 1
+                            });
+
+                            workbookData['Wydatki'] = XLSX.utils.sheet_to_json(ws, {
+                                range: 'AC6:AG18',
+                                header: 1
+                            });
+
+                            workbookData['Zwrot'] = XLSX.utils.sheet_to_json(ws, {
+                                range: 'AN6:AO13',
+                                header: 1
+                            });
+
+                            buildReport();
+                        }
+                    } catch (err) {
+                        console.log('Brak danych z OneDrive - użyj manual upload', err);
+                    }
+                })
+                .catch(err => {
+                    console.log('Błąd pobierania z OneDrive - funkcja uploadowania dostępna', err);
+                });
+        }
+
+        function loadFile() {
+            const file = document.getElementById('excelFile').files[0];
+            if (!file) {
+                showMessage('❌ Wybierz plik!', 'error');
+                return;
+            }
+
+            if (!xlsxLoaded) {
+                showMessage('⏳ Biblioteka się ładuje...', 'error');
+                setTimeout(loadFile, 2000);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+
+                    if (workbook.SheetNames.includes('Dashboard')) {
+                        const ws = workbook.Sheets['Dashboard'];
+
+                        workbookData['Fees'] = XLSX.utils.sheet_to_json(ws, {
+                            range: 'A7:B9',
+                            header: 1
+                        });
+
+                        workbookData['Dashboard'] = XLSX.utils.sheet_to_json(ws, {
+                            range: 'H7:M16',
+                            header: 1
+                        });
+
+                        workbookData['Wydatki'] = XLSX.utils.sheet_to_json(ws, {
+                            range: 'AC6:AG18',
+                            header: 1
+                        });
+
+                        workbookData['Zwrot'] = XLSX.utils.sheet_to_json(ws, {
+                            range: 'AN6:AO13',
+                            header: 1
+                        });
+                    } else {
+                        throw new Error('Nie znaleziono arkusza "Dashboard"');
+                    }
+
+                    buildReport();
+                    showMessage('✅ Raport załadowany pomyślnie!', 'success');
+                } catch (err) {
+                    showMessage('❌ Błąd: ' + err.message, 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function buildReport() {
+            const fees = workbookData['Fees'];
+            if (fees && fees.length > 1) {
+                const feeTable = document.getElementById('feeTable');
+                feeTable.innerHTML = fees.slice(1).map(row => `
+                    <tr>
+                        <td>${row[0]}</td>
+                        <td class="number">${parseFloat(row[1]).toLocaleString('pl-PL')} zł</td>
+                    </tr>
+                `).join('');
+            }
+
+            const dashboard = workbookData['Dashboard'];
+            if (!dashboard || dashboard.length === 0) {
+                showMessage('❌ Brak danych w Dashboard', 'error');
+                return;
+            }
+
+            if (dashboard.length < 2) {
+                showMessage('❌ Brak danych o klasach', 'error');
+                return;
+            }
+
+            const classData = [];
+            let totals = { people: 0, plan: 0, coll: 0 };
+
+            for (let i = 1; i < dashboard.length; i++) {
+                const row = dashboard[i];
+                if (!row || !row[0] || row[0].toString().trim() === '') break;
+
+                const klasa = row[0].toString().trim();
+                const stud = parseFloat(row[1]) || 0;
+                const tow = parseFloat(row[2]) || 0;
+                const plan = parseFloat(row[3]) || 0;
+                const coll = parseFloat(row[4]) || 0;
+
+                const razem = stud + tow;
+                const delta = coll - plan;
+                const percent = plan > 0 ? ((coll / plan) * 100).toFixed(1) : 0;
+
+                classData.push({
+                    klasa, stud, tow, razem, plan, coll, delta, percent
+                });
+
+                totals.people += razem;
+                totals.plan += plan;
+                totals.coll += coll;
+            }
+
+            const deficit = totals.coll - totals.plan;
+            const totalStud = classData.reduce((sum, c) => sum + c.stud, 0);
+            const totalTow = classData.reduce((sum, c) => sum + c.tow, 0);
+
+            document.getElementById('totalPeople').textContent = totals.people.toLocaleString('pl-PL');
+            document.getElementById('peopleBreakdown').innerHTML = `${totalStud} uczniów + ${totalTow} towarzyszących`;
+            document.getElementById('plannedTotal').textContent = totals.plan.toLocaleString('pl-PL') + ' zł';
+            document.getElementById('collectedTotal').textContent = totals.coll.toLocaleString('pl-PL') + ' zł';
+            const deficitEl = document.getElementById('deficitTotal');
+            deficitEl.textContent = deficit.toLocaleString('pl-PL') + ' zł';
+            if (deficit < 0) deficitEl.parentElement.classList.add('negative-card');
+            else deficitEl.parentElement.classList.remove('negative-card');
+
+            document.getElementById('classTable').innerHTML = classData.map(c => `
+                <tr>
+                    <td><strong>${c.klasa}</strong></td>
+                    <td class="number">${c.stud}</td>
+                    <td class="number">${c.tow}</td>
+                    <td class="number">${c.razem}</td>
+                    <td class="number">${c.plan.toLocaleString('pl-PL')}</td>
+                    <td class="number">${c.coll.toLocaleString('pl-PL')}</td>
+                    <td class="number ${c.delta < 0 ? 'negative' : 'positive'}">${c.delta.toLocaleString('pl-PL')}</td>
+                    <td class="number ${c.percent < 50 ? 'negative' : 'positive'}">${c.percent}%</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('percentTable').innerHTML = classData.map(c => `
+                <tr>
+                    <td>${c.klasa}</td>
+                    <td class="number ${c.percent < 50 ? 'negative' : 'positive'}">${c.percent}%</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('deficitTable').innerHTML = classData.map(c => `
+                <tr>
+                    <td>${c.klasa}</td>
+                    <td class="number ${c.delta < 0 ? 'negative' : 'positive'}">${c.delta.toLocaleString('pl-PL')} zł</td>
+                </tr>
+            `).join('');
+
+            const zwrot = workbookData['Zwrot'];
+            if (zwrot && zwrot.length > 1) {
+                const zwrotTable = document.getElementById('zwrotTable');
+                zwrotTable.innerHTML = zwrot.slice(1).map(row => {
+                    const zwrotValue = parseFloat(row[1]) || 0;
+                    return `
+                    <tr>
+                        <td><strong>${row[0]}</strong></td>
+                        <td class="number ${zwrotValue < 0 ? 'negative' : 'positive'}">${zwrotValue.toLocaleString('pl-PL', {minimumFractionDigits: 2, maximumFractionDigits: 2})} zł</td>
+                    </tr>
+                `;
+                }).join('');
+            }
+
+            loadCosts();
+            calculateCountdown();
+            document.getElementById('content').style.display = 'block';
+        }
+
+        function loadCosts() {
+            const costsContent = document.getElementById('costsContent');
+            const wydatki = workbookData['Wydatki'];
+
+            if (!wydatki || wydatki.length < 2) {
+                costsContent.innerHTML = '<div style="color: #8892a0; padding: 20px;">Brak danych o wydatkach</div>';
+                return;
+            }
+
+            let html = '';
+            let totalCost = 0;
+            let itemCount = 0;
+
+            for (let i = 1; i < wydatki.length - 1; i++) {
+                const row = wydatki[i];
+                if (!row || !row[0]) break;
+
+                const opis = row[0];
+                const koszt = parseFloat(row[1]) || 0;
+
+                if (koszt === 0) {
+                    continue;
+                }
+
+                itemCount++;
+                totalCost += koszt;
+                html += `<div class="cost-item">
+                    <span class="cost-name">${opis.toString().trim()}</span>
+                    <span class="cost-value">${koszt.toLocaleString('pl-PL')} zł</span>
+                </div>`;
+            }
+
+            if (html) {
+                costsContent.innerHTML = html;
+                document.getElementById('costTotalValue').textContent = totalCost.toLocaleString('pl-PL') + ' zł';
+                document.getElementById('costTotalBox').style.display = 'flex';
+            } else {
+                costsContent.innerHTML = '<div style="color: #8892a0; padding: 20px;">Brak pozycji wydatkowych</div>';
+            }
+        }
+    </script>
+</body>
+</html>
