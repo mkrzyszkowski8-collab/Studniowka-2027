@@ -922,9 +922,9 @@
                     <td class="number">${c.stud}</td>
                     <td class="number">${c.tow}</td>
                     <td class="number">${c.razem}</td>
-                    <td class="number">${c.plan.toLocaleString('pl-PL')}</td>
-                    <td class="number">${c.coll.toLocaleString('pl-PL')}</td>
-                    <td class="number ${c.delta < 0 ? 'negative' : 'positive'}">${c.delta.toLocaleString('pl-PL')}</td>
+                    <td class="number">${c.plan.toLocaleString('pl-PL')} zł</td>
+                    <td class="number">${c.coll.toLocaleString('pl-PL')} zł</td>
+                    <td class="number ${c.delta < 0 ? 'negative' : 'positive'}">${c.delta.toLocaleString('pl-PL')} zł</td>
                     <td class="number ${c.percent < 50 ? 'negative' : 'positive'}">${c.percent}%</td>
                 </tr>
             `).join('');
@@ -946,8 +946,12 @@
             const zwrot = workbookData['Zwrot'];
             if (zwrot && zwrot.length > 1) {
                 const zwrotTable = document.getElementById('zwrotTable');
-                zwrotTable.innerHTML = zwrot.slice(1).map(row => {
+                const dataRows = zwrot.slice(1).filter(row => row[0] && row[0].toString().trim() !== '');
+                let totalZwrot = 0;
+
+                const rowsHtml = dataRows.map(row => {
                     const zwrotValue = parseFloat(row[1]) || 0;
+                    totalZwrot += zwrotValue;
                     return `
                     <tr>
                         <td><strong>${row[0]}</strong></td>
@@ -955,6 +959,15 @@
                     </tr>
                 `;
                 }).join('');
+
+                const totalRow = `
+                    <tr style="border-top: 2px solid #0ea5e9; font-weight: bold; background: rgba(14, 165, 233, 0.1);">
+                        <td>SUMA NADWYŻKI</td>
+                        <td class="number ${totalZwrot < 0 ? 'negative' : 'positive'}">${totalZwrot.toLocaleString('pl-PL', {minimumFractionDigits: 2, maximumFractionDigits: 2})} zł</td>
+                    </tr>
+                `;
+
+                zwrotTable.innerHTML = rowsHtml + totalRow;
             }
 
             loadCosts();
