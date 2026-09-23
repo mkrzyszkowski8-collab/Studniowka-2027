@@ -138,7 +138,7 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(5, 1fr);
             gap: 28px;
             margin: 35px 0;
         }
@@ -390,11 +390,15 @@
             h1 { font-size: 2.8em; }
         }
 
+        @media (max-width: 1400px) {
+            .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; }
+        }
+
         @media (max-width: 1000px) {
             .grid-2 { grid-template-columns: 1fr; }
             .container { padding: 40px 30px; }
             h1 { font-size: 2.4em; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
         }
 
         @media (max-width: 768px) {
@@ -407,7 +411,7 @@
             input[type="file"] { font-size: 0.9em; }
             button { padding: 12px 30px; font-size: 14px; margin-left: 8px; }
 
-            .stats-grid { grid-template-columns: 1fr; gap: 15px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
             .stat-card { padding: 16px 14px; min-height: 140px; }
             .stat-label { font-size: 0.68em; margin-bottom: 6px; }
             .stat-value { font-size: 1.5em; }
@@ -540,6 +544,10 @@
                     <div class="stat-label">📦 Pozostało do Zebrania</div>
                     <div class="stat-value" id="deficitTotal">-</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-label">🎤 Osoby 3-cie</div>
+                    <div class="stat-value" id="thirdPartyBox">-</div>
+                </div>
             </div>
 
             <!-- TABELA PER KLASA -->
@@ -554,7 +562,7 @@
                         <th class="number">Planowana</th>
                         <th class="number">Zebrana</th>
                         <th class="number">Pozostało do Zebrania</th>
-                        <th class="number">% Zebrаnо</th>
+                        <th class="number">% Zebrано</th>
                     </tr>
                 </thead>
                 <tbody id="classTable"></tbody>
@@ -567,7 +575,7 @@
                     <div style="color: #a0aec0; padding: 20px; text-align: center;">Ładowanie danych kosztów...</div>
                 </div>
                 <div class="cost-total" id="costTotalBox" style="display:none;">
-                    <span class="cost-total-label">ŁĄCZNE KOSZTY STUDNIÓWKI:</span>
+                    <span class="cost-total-label">ŁĄCZNE KOSZTY IMPREZY:</span>
                     <span class="cost-total-value" id="costTotalValue">-</span>
                 </div>
             </div>
@@ -681,7 +689,7 @@
                         const ws = workbook.Sheets['Dashboard'];
 
                         workbookData['Fees'] = XLSX.utils.sheet_to_json(ws, {
-                            range: 'A7:B9',
+                            range: 'X8:Y11',
                             header: 1
                         });
 
@@ -799,7 +807,7 @@
                         const ws = workbook.Sheets['Dashboard'];
 
                         workbookData['Fees'] = XLSX.utils.sheet_to_json(ws, {
-                            range: 'A7:B9',
+                            range: 'X8:Y11',
                             header: 1
                         });
 
@@ -845,6 +853,14 @@
                         <td class="number">${parseFloat(row[1]).toLocaleString('pl-PL')} zł</td>
                     </tr>
                 `).join('');
+            }
+
+            // Wyświetl dane osób 3-cich z X11:Y11
+            if (fees && fees.length > 3) {
+                const thirdPartyRow = fees[3];
+                const thirdPartyBox = document.getElementById('thirdPartyBox');
+                thirdPartyBox.textContent = parseFloat(thirdPartyRow[1]).toLocaleString('pl-PL');
+                thirdPartyBox.title = thirdPartyRow[0];
             }
 
             const dashboard = workbookData['Dashboard'];
