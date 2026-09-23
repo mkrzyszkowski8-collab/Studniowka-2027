@@ -720,9 +720,6 @@
                 buildReport();
                 // Hide upload box when data is loaded from storage
                 document.querySelector('.upload-box').style.display = 'none';
-                const timestamp = localStorage.getItem('studniowka_report_timestamp');
-                const dateStr = timestamp ? new Date(timestamp).toLocaleString('pl-PL') : 'nieznana data';
-                showDataStatus('📦 Dane załadowane z pamięci przeglądarki z ' + dateStr, 'info');
             }
         }
 
