@@ -869,8 +869,8 @@
 
             // Wyświetl dane osób 3-cich z X11:Y11
             const thirdParty = workbookData['ThirdParty'];
-            if (thirdParty && thirdParty.length > 1) {
-                const thirdPartyRow = thirdParty[1];
+            if (thirdParty && thirdParty.length > 0) {
+                const thirdPartyRow = thirdParty[0];
                 const thirdPartyBox = document.getElementById('thirdPartyBox');
                 const breakdown = document.getElementById('thirdPartyBreakdown');
                 thirdPartyBox.textContent = parseFloat(thirdPartyRow[1]).toLocaleString('pl-PL');
