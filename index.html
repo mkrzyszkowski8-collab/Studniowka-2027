@@ -563,7 +563,7 @@
                         <th class="number">Planowana</th>
                         <th class="number">Zebrana</th>
                         <th class="number">Pozostało do Zebrania</th>
-                        <th class="number">% Zebrаnо</th>
+                        <th class="number">% Zebrano</th>
                     </tr>
                 </thead>
                 <tbody id="classTable"></tbody>
@@ -591,7 +591,7 @@
                             <thead>
                                 <tr>
                                     <th>Klasa</th>
-                                    <th class="number">Zebrаnо %</th>
+                                    <th class="number">Zebrано %</th>
                                 </tr>
                             </thead>
                             <tbody id="percentTable"></tbody>
@@ -691,6 +691,11 @@
 
                         workbookData['Fees'] = XLSX.utils.sheet_to_json(ws, {
                             range: 'A7:B9',
+                            header: 1
+                        });
+
+                        workbookData['ThirdParty'] = XLSX.utils.sheet_to_json(ws, {
+                            range: 'X11:Y11',
                             header: 1
                         });
 
@@ -812,6 +817,11 @@
                             header: 1
                         });
 
+                        workbookData['ThirdParty'] = XLSX.utils.sheet_to_json(ws, {
+                            range: 'X11:Y11',
+                            header: 1
+                        });
+
                         workbookData['Dashboard'] = XLSX.utils.sheet_to_json(ws, {
                             range: 'H7:M16',
                             header: 1
@@ -858,8 +868,9 @@
             }
 
             // Wyświetl dane osób 3-cich z X11:Y11
-            if (fees && fees.length > 3) {
-                const thirdPartyRow = fees[3];
+            const thirdParty = workbookData['ThirdParty'];
+            if (thirdParty && thirdParty.length > 1) {
+                const thirdPartyRow = thirdParty[1];
                 const thirdPartyBox = document.getElementById('thirdPartyBox');
                 const breakdown = document.getElementById('thirdPartyBreakdown');
                 thirdPartyBox.textContent = parseFloat(thirdPartyRow[1]).toLocaleString('pl-PL');
