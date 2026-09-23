@@ -481,7 +481,7 @@
 <body>
     <div class="container">
         <h1>📊 Studniówka 2027 - Raport Finansowy</h1>
-        <p class="subtitle">Raport szczegółowy</p>
+        <p class="subtitle">Raport szczegółowy na bazie arkusza Dashboard</p>
 
         <div class="upload-box">
             <input type="file" id="excelFile" accept=".xlsx,.xls" />
@@ -567,7 +567,7 @@
                     <div style="color: #a0aec0; padding: 20px; text-align: center;">Ładowanie danych kosztów...</div>
                 </div>
                 <div class="cost-total" id="costTotalBox" style="display:none;">
-                    <span class="cost-total-label">ŁĄCZNE KOSZTY STUDNIÓWKI:</span>
+                    <span class="cost-total-label">ŁĄCZNE KOSZTY IMPREZY:</span>
                     <span class="cost-total-value" id="costTotalValue">-</span>
                 </div>
             </div>
@@ -701,7 +701,8 @@
                         });
 
                         buildReport();
-                        showDataStatus('✅ Dane załadowane z GitHub (jsDelivr CDN)', 'success');
+                        // Hide upload box when data is auto-loaded from GitHub
+                        document.querySelector('.upload-box').style.display = 'none';
                     }
                 })
                 .catch(err => {
@@ -717,9 +718,11 @@
             if (savedData && Object.keys(savedData).length > 0) {
                 workbookData = savedData;
                 buildReport();
+                // Hide upload box when data is loaded from storage
+                document.querySelector('.upload-box').style.display = 'none';
                 const timestamp = localStorage.getItem('studniowka_report_timestamp');
                 const dateStr = timestamp ? new Date(timestamp).toLocaleString('pl-PL') : 'nieznana data';
-                showDataStatus('📦 Dane załadowane poprawnie');
+                showDataStatus('📦 Dane załadowane z pamięci przeglądarki z ' + dateStr, 'info');
             }
         }
 
