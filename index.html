@@ -486,9 +486,11 @@
         <div class="upload-box">
             <input type="file" id="excelFile" accept=".xlsx,.xls" />
             <button onclick="loadFile()">📂 Wczytaj plik Excel</button>
+            <button onclick="clearData()" style="background: #64748b; margin-left: 8px;">🗑️ Wyczyść dane</button>
         </div>
 
         <div id="message"></div>
+        <div id="dataStatus"></div>
 
         <div id="content" style="display:none;">
             <!-- LICZNIK CZASU - GÓRNY PRAWY ROG -->
@@ -627,54 +629,77 @@
 
         let workbookData = {};
 
-        // Auto-load Excel z GitHub
-        const GITHUB_EXCEL_URL = 'https://raw.githubusercontent.com/mkrzyszkowski8-collab/studniowka-2027/main/Studni%C3%B3wka%202027_I%20LO.xlsx';
-
-        function autoLoadGitHubExcel() {
-            if (!xlsxLoaded) {
-                setTimeout(autoLoadGitHubExcel, 500);
-                return;
+        // localStorage persistence functions
+        function saveToLocalStorage(data) {
+            try {
+                localStorage.setItem('studniowka_report_data', JSON.stringify(data));
+                localStorage.setItem('studniowka_report_timestamp', new Date().toISOString());
+            } catch (err) {
+                console.error('Błąd zapisania do localStorage:', err);
             }
-
-            fetch(GITHUB_EXCEL_URL)
-                .then(response => response.arrayBuffer())
-                .then(data => {
-                    const workbook = XLSX.read(data, { type: 'array' });
-
-                    if (workbook.SheetNames.includes('Dashboard')) {
-                        const ws = workbook.Sheets['Dashboard'];
-
-                        workbookData['Fees'] = XLSX.utils.sheet_to_json(ws, {
-                            range: 'A7:B9',
-                            header: 1
-                        });
-
-                        workbookData['Dashboard'] = XLSX.utils.sheet_to_json(ws, {
-                            range: 'H7:M16',
-                            header: 1
-                        });
-
-                        workbookData['Wydatki'] = XLSX.utils.sheet_to_json(ws, {
-                            range: 'AC6:AG18',
-                            header: 1
-                        });
-
-                        workbookData['Zwrot'] = XLSX.utils.sheet_to_json(ws, {
-                            range: 'AN6:AO13',
-                            header: 1
-                        });
-
-                        buildReport();
-                    }
-                })
-                .catch(err => {
-                    console.error('Błąd ładowania z GitHub:', err);
-                    showMessage('⚠️ Nie można załadować danych z GitHub. Użyj pola do wgrania pliku.', 'error');
-                });
         }
 
-        // Uruchom auto-load przy załadowaniu strony
-        autoLoadGitHubExcel();
+        function loadFromLocalStorage() {
+            try {
+                const saved = localStorage.getItem('studniowka_report_data');
+                if (saved) {
+                    return JSON.parse(saved);
+                }
+            } catch (err) {
+                console.error('Błąd wczytania z localStorage:', err);
+            }
+            return null;
+        }
+
+        function clearLocalStorage() {
+            try {
+                localStorage.removeItem('studniowka_report_data');
+                localStorage.removeItem('studniowka_report_timestamp');
+            } catch (err) {
+                console.error('Błąd czyszczenia localStorage:', err);
+            }
+        }
+
+        // Try to load from localStorage on page load
+        function initializeFromStorage() {
+            const savedData = loadFromLocalStorage();
+            if (savedData && Object.keys(savedData).length > 0) {
+                workbookData = savedData;
+                buildReport();
+                const timestamp = localStorage.getItem('studniowka_report_timestamp');
+                const dateStr = timestamp ? new Date(timestamp).toLocaleString('pl-PL') : 'nieznana data';
+                showDataStatus('📦 Dane załadowane z pamięci przeglądarki z ' + dateStr, 'info');
+            }
+        }
+
+        function showDataStatus(msg, type = 'info') {
+            const el = document.getElementById('dataStatus');
+            let bgColor, textColor, borderColor;
+            if (type === 'success') {
+                bgColor = '#1e4d3a';
+                textColor = '#6ee7a8';
+                borderColor = '#27ae60';
+            } else {
+                bgColor = '#1e3a5f';
+                textColor = '#5db3e8';
+                borderColor = '#0ea5e9';
+            }
+            el.innerHTML = '<div class="status" style="background: ' + bgColor + '; color: ' + textColor + '; border-left-color: ' + borderColor + ';">' + msg + '</div>';
+        }
+
+        function clearData() {
+            if (confirm('Czy na pewno chcesz wyczyścić zapisane dane? Ta akcja nie może być cofnięta.')) {
+                clearLocalStorage();
+                workbookData = {};
+                document.getElementById('content').style.display = 'none';
+                document.getElementById('message').innerHTML = '';
+                document.getElementById('dataStatus').innerHTML = '';
+                showMessage('✅ Dane wyczyszczone. Możesz wgrać nowy plik.', 'success');
+            }
+        }
+
+        // Uruchom inicjalizację przy załadowaniu strony
+        initializeFromStorage();
 
         function showMessage(msg, type = 'info') {
             const el = document.getElementById('message');
@@ -745,8 +770,13 @@
                         throw new Error('Nie znaleziono arkusza "Dashboard"');
                     }
 
+                    // Save to localStorage for persistence
+                    saveToLocalStorage(workbookData);
                     buildReport();
-                    showMessage('✅ Raport załadowany pomyślnie!', 'success');
+                    showMessage('✅ Raport załadowany pomyślnie! Dane zapisane w przeglądarce.', 'success');
+
+                    // Clear file input
+                    document.getElementById('excelFile').value = '';
                 } catch (err) {
                     showMessage('❌ Błąd: ' + err.message, 'error');
                 }
